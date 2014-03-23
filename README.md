@@ -13,17 +13,17 @@ First build and publish locally
 [success] Total time: 14s, completed...
 > publish-local
 ...
-[info] published ivy to /Users/you/.ivy2/local/com.phlexglobal/sbt-tomcat-plugin/scala_...
+[info] published ivy to /Users/you/.ivy2/local/com.cakemanny/sbt-tomcat-plugin/scala_...
 ```
 
 Add to *project/plugins.sbt*:
 ```scala
-addSbtPlugin("com.phlexglobal" %% "sbt-tomcat-plugin" % "0.2-SNAPSHOT")
+addSbtPlugin("com.cakemanny" %% "sbt-tomcat-plugin" % "0.2-SNAPSHOT")
 ```
 
 Configure in *build.sbt*:
 ```scala
-TomcatKeys.credentials := com.phlexglobal.TomcatPlugin.Credentials("freddy", "freddyspassword")
+TomcatKeys.credentials := TomcatCredentials("freddy", "freddyspassword")
 
 TomcatKeys.warFile := file ("target/scala-2.10/myapp.war")
 

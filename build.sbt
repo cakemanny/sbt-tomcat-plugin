@@ -2,7 +2,7 @@ sbtPlugin := true
 
 name := "sbt-tomcat-plugin"
 
-organization := "com.phlexglobal"
+organization := "com.cakemanny"
 
 version := "0.2-SNAPSHOT"
 
