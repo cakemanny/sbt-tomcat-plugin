@@ -1,2 +1,4 @@
 target/
 *.class
+*.swp
+sbt-launch.jar

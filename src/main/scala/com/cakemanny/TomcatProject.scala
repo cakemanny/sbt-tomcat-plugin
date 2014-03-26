@@ -1,13 +1,7 @@
 package com.cakemanny
 
-import java.io.File
-import java.io.FileNotFoundException
-
-import javax.ws.rs.core.MediaType
-import javax.ws.rs.client._
-import org.glassfish.jersey.client.authentication.HttpAuthenticationFeature
-import org.glassfish.jersey.client.ClientConfig
-import scala.util.matching.Regex
+import java.io.{ File, FileNotFoundException }
+import scala.io.Source
 
 object TomcatProject {
 
@@ -23,6 +17,7 @@ object TomcatProject {
     deploy(host, port, war, creds, Seq(("update", "true")))
   }
 
+  // Want to create the plugin with no dependencies
   def deploy(
     host: String,
     port: Int,
@@ -32,31 +27,33 @@ object TomcatProject {
   ) = {
     validateWar(war)
 
-    val authFeature = HttpAuthenticationFeature.basic(creds.username, creds.password)
-    val client = ClientBuilder.newClient(
-      new ClientConfig().register(authFeature, 1)
+    val path = "/" + war.getName.replaceFirst("\\.war$", "")
+    val urlString = extras.foldLeft(
+      s"http://$host:$port/manager/text/deploy?path=$path"
+    ){ (l, r) => l + "&" + r._1 + "=" + r._2 }
+    val url = new java.net.URL(urlString)
+
+    val conn = url.openConnection.asInstanceOf[java.net.HttpURLConnection]
+    conn.setRequestMethod("PUT")
+    conn.setDoOutput(true)
+    conn.setRequestProperty("Content-Length", String.valueOf(war.length))
+    conn.setRequestProperty("Content-Type", "application/x-zip")
+
+    val token = new sun.misc.BASE64Encoder().encode(
+      (creds.username + ":" + creds.password).getBytes
     )
-    val path = "/" + "\\.war$".r.replaceFirstIn(war.getName, "")
-    var target = client.target(s"http://$host:$port")
-      .path("manager/text/deploy")
-      .queryParam("path", path)
+    conn.setRequestProperty("Authorization", "Basic " + token)
 
-    for (param <- extras)
-      target = target.queryParam(param._1, param._2)
+    val warBytes = java.nio.file.Files.readAllBytes(war.toPath)
+    conn.getOutputStream.write(warBytes)
+    conn.getOutputStream.close
 
-    val response = target.request()
-      .put(Entity.entity(war, MediaType.MULTIPART_FORM_DATA_TYPE))
-
-    if ((200 to 300) contains response.getStatus) {
-      val message = response.readEntity(classOf[String])
-      println(message)
-      if (message.startsWith("FAIL")) {
-        throw new Exception(message)
-      } else
-        response.getStatus
-    } else
-      throw new Exception("Unable to deploy: " +
-        response.getStatusInfo.getReasonPhrase)
+    val message = Source.fromInputStream(conn.getInputStream).mkString
+    println(message)
+    if (message.startsWith("FAIL")) {
+      throw new Exception(message)
+    }
+    200
   }
 
 }
