@@ -4,6 +4,8 @@ A simple sbt plugin that allows redeployment of a web project to tomcat.
 Thanks to the numerous examples on github I've managed to write this on the
 second and third day of using sbt - not being able to find one straight away.
 
+_Note_: No affiliation with either Tomcat or sbt projects
+
 ## Instructions
 
 First build and publish locally
@@ -28,6 +30,11 @@ TomcatKeys.credentials := TomcatCredentials("freddy", "freddyspassword")
 TomcatKeys.warFile := file ("target/scala-2.10/myapp.war")
 
 seq(tomcatSettings: _*)
+```
+
+You can setup dependencies (here packageWar is from Earl Douglas' xsbt-web-plugin):
+```scala
+TomcatKeys.redeploy <<= TomcatKeys.redeploy dependsOn (packageWar in Compile)
 ```
 
 ## Configuring Tomcat
